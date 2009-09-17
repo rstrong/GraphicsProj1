@@ -15,12 +15,12 @@ typedef Imath::Vec2<float> Vec2f;
 
 struct Mesh
 {
+	// Vertex coordinates
 	std::vector<Vec3f> m_v;
-	std::vector<Vec3f> m_n; 
-	
-	std::vector<int> m_vi;
-	std::vector<int> m_ni;
+	std::vector<Vec3f> m_color;
 
+	std::vector<int> m_vi;
+	std::vector<int> m_ci;
 };
 
 int HEIGHT = 1024;
@@ -139,50 +139,73 @@ top_reshape(int width, int height)
 void render_plane(void)
 {
 	std::cout<< "render_plane" << std::endl; 
+
+	/**
+	Plane (probably should load elsewhere....
+	**/
 	Mesh plane;
-	//generate vertices...
+
+	//load vertices
 	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.0));
 	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.0));
 	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.25));
 	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.25));
-
 	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.25));
 	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.25));
 	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.0));
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.0));
-
-	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.25));
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.25));
-
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.0));
-	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.0));
-
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.25));
-
-	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.0));
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.25));
 	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.0));
 	
+	plane.m_color.push_back(Vec3f(1.0, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.9, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.8, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.7, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.6, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.5, 0.0, 0.0));
+	plane.m_color.push_back(Vec3f(0.5, 0.1, 0.0));
+	plane.m_color.push_back(Vec3f(0.5, 0.2, 0.0));
+
+	plane.m_vi.push_back(0);
+	plane.m_vi.push_back(1);
+	plane.m_vi.push_back(2);
+	plane.m_vi.push_back(3);
+	plane.m_vi.push_back(4);
+	plane.m_vi.push_back(5);
+	plane.m_vi.push_back(6);
+	plane.m_vi.push_back(7);
+	plane.m_vi.push_back(3);
+	plane.m_vi.push_back(2);
+	plane.m_vi.push_back(5);
+	plane.m_vi.push_back(4);
+	plane.m_vi.push_back(7);
+	plane.m_vi.push_back(6);
+	plane.m_vi.push_back(1);
+	plane.m_vi.push_back(0);
+	plane.m_vi.push_back(2);
+	plane.m_vi.push_back(2);
+	plane.m_vi.push_back(6);
+	plane.m_vi.push_back(5);
+	plane.m_vi.push_back(0);
+	plane.m_vi.push_back(1);
+	plane.m_vi.push_back(4);
+	plane.m_vi.push_back(7);
+
+	/* End Plane */ 
+
 	std::vector<Vec3f> v = plane.m_v;
+	std::vector<int> vi = plane.m_vi;
+	std::vector<Vec3f> v_color = plane.m_color;
 	// Need to change to vi 
 	std::cout << "Scale is: " << scale << std::endl;
-	glScalef(scale, scale, scale);
-	glRotatef(x_angle, 1.0f, 0.0f, 0.0f);
-	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
+//	glScalef(scale, scale, scale);
+//	glRotatef(x_angle, 1.0f, 0.0f, 0.0f);
+//	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
 //	glTranslatef(0.0, 0.0, -10.0);
 	glBegin(GL_QUADS);
-	glColor3f(1.0, 0.0, 0.0);
-	for(unsigned int i = 0; i < v.size(); i++)
+	glEnable(GL_BLEND);
+	for(unsigned int i = 0; i < vi.size(); i++)
 	{
-		glVertex3f(v[i].x, v[i].y, v[i].z);
+		glColor3f(v_color[vi[i]].x, v_color[vi[i]].y, v_color[vi[i]].z); 
+		glVertex3f(v[vi[i]].x, v[vi[i]].y, v[vi[i]].z);
 
 	}
 	glEnd();
@@ -190,7 +213,90 @@ void render_plane(void)
 	glTranslatef(x_car, y_car, 0.25f);
 	glutWireSphere(0.25f, 10, 10);
 
-	glLoadIdentity();
+//	glLoadIdentity();
+}
+
+void createBox(void)
+{
+	Mesh box;
+
+	box.m_v.push_back(Vec3f(1.0, 1.0, -1.0));
+	box.m_v.push_back(Vec3f(-1.0, 1.0, -1.0));
+	box.m_v.push_back(Vec3f(-1.0, 1.0, 1.0));
+	box.m_v.push_back(Vec3f(1.0, 1.0, 1.0));
+	box.m_v.push_back(Vec3f(1.0, -1.0, 1.0));
+	box.m_v.push_back(Vec3f(-1.0, -1.0, 1.0));
+	box.m_v.push_back(Vec3f(-1.0, -1.0, -1.0));
+	box.m_v.push_back(Vec3f(1.0, -1.0, -1.0));
+
+	box.m_color.push_back(Vec3f(0.0, 1.0, 0.0));
+	box.m_color.push_back(Vec3f(0.0, 1.0, 0.2));
+	box.m_color.push_back(Vec3f(0.0, 1.0, 0.4));
+	box.m_color.push_back(Vec3f(0.0, 1.0, 0.6));
+	box.m_color.push_back(Vec3f(0.2, 1.0, 0.0));
+	box.m_color.push_back(Vec3f(0.4, 1.0, 0.0));
+	box.m_color.push_back(Vec3f(0.6, 1.0, 0.0));
+	box.m_color.push_back(Vec3f(0.2, 1.0, 0.2));
+
+	box.m_vi.push_back(0);
+	box.m_vi.push_back(1);
+	box.m_vi.push_back(2);
+	box.m_vi.push_back(3);
+	box.m_vi.push_back(4);
+	box.m_vi.push_back(5);
+	box.m_vi.push_back(6);
+	box.m_vi.push_back(7);
+	box.m_vi.push_back(3);
+	box.m_vi.push_back(2);
+	box.m_vi.push_back(5);
+	box.m_vi.push_back(4);
+	box.m_vi.push_back(7);
+	box.m_vi.push_back(6);
+	box.m_vi.push_back(1);
+	box.m_vi.push_back(0);
+	box.m_vi.push_back(2);
+	box.m_vi.push_back(1);
+	box.m_vi.push_back(6);
+	box.m_vi.push_back(5);
+	box.m_vi.push_back(0);
+	box.m_vi.push_back(3);
+	box.m_vi.push_back(4);
+	box.m_vi.push_back(7);
+
+
+	std::vector<Vec3f> v = box.m_v;
+	std::vector<int> vi = box.m_vi;
+	std::vector<Vec3f> v_color = box.m_color;
+	
+	glBegin(GL_QUADS);
+	for(unsigned int i = 0; i < vi.size(); i++)
+	{
+		glColor3f(v_color[vi[i]].x, v_color[vi[i]].y, v_color[vi[i]].z); 
+		glVertex3f(v[vi[i]].x, v[vi[i]].y, v[vi[i]].z);
+
+	}
+	glEnd();
+
+}
+
+//TODO
+void createCylinder(void)
+{
+	Mesh cyl;
+
+	int i;
+	
+	int sides = 30;
+	for(i = 0; i < 360; i += sides)
+	{
+	//	cyl.m_v.push_back(Vec3f(sin(i), cos(i), 0));
+	//	cyl.m_v.push_back(Vec3f(sin(i), cos(i), 2));
+	}
+	for(i = 0; i < sides; i++)
+	{
+	//	cyl.m_vi.push_back();
+	}
+
 }
 
 void
@@ -201,18 +307,16 @@ top_display(void)
 
 	glLoadIdentity();
 	glColor3f(1.0, 0.0, 0.0);
-	//glTranslatef(test[0], test[1], test[2]);	
+	
+	
+	glScalef(scale, scale, scale);
+	glRotatef(x_angle, 1.0f, 0.0f, 0.0f);
+	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
+
+	glShadeModel(GL_SMOOTH);
 	render_plane();
-//	glBegin(GL_TRIANGLES);								// Start Drawing A Triangle
-//		glColor3f(1.0f,0.0f,0.0f);						// Set Top Point Of Triangle To Red
-//		glVertex3f( 0.0f, 1.0f, 0.0f);					// First Point Of The Triangle
-//		glColor3f(0.0f,1.0f,0.0f);						// Set Left Point Of Triangle To Green
-//		glVertex3f(-1.0f,-1.0f, 0.0f);					// Second Point Of The Triangle
-//		glColor3f(0.0f,0.0f,1.0f);						// Set Right Point Of Triangle To Blue
-//		glVertex3f( 1.0f,-1.0f, 0.0f);					// Third Point Of The Triangle
-//	glEnd();			
-
-
+	
+	createBox();
 
 
 
