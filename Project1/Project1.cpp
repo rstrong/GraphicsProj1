@@ -284,18 +284,39 @@ void createCylinder(void)
 {
 	Mesh cyl;
 
-	int i;
+	float i;
+	int size = 0;	
+	for(i = 0; i <= 6.4; i += 0.2)
+	{
+		//std::cout << "Coords: " << sin(i) << "," << cos(i) << std::endl;
+		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 0));
+		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 2));
+		size += 2;
+	}
+	int j;
+	for(j = 0; j < size; j += 2)
+	{
+		if( (j + 1) < size)
+		{
+			cyl.m_vi.push_back(j);
+			cyl.m_vi.push_back(j+1);
+		}
+	}
+
+
+	std::vector<Vec3f> v = cyl.m_v;
+	std::vector<int> vi = cyl.m_vi;
+	//std::vector<Vec3f> v_color = box.m_color;
 	
-	int sides = 30;
-	for(i = 0; i < 360; i += sides)
+	glBegin(GL_QUAD_STRIP);
+	glColor3f(0.0, 0.0, 1.0);
+	for(unsigned int i = 0; i < vi.size(); i++)
 	{
-	//	cyl.m_v.push_back(Vec3f(sin(i), cos(i), 0));
-	//	cyl.m_v.push_back(Vec3f(sin(i), cos(i), 2));
+		//glColor3f(v_color[vi[i]].x, v_color[vi[i]].y, v_color[vi[i]].z); 
+		glVertex3f(v[vi[i]].x, v[vi[i]].y, v[vi[i]].z);
+
 	}
-	for(i = 0; i < sides; i++)
-	{
-	//	cyl.m_vi.push_back();
-	}
+	glEnd();
 
 }
 
@@ -308,18 +329,18 @@ top_display(void)
 	glLoadIdentity();
 	glColor3f(1.0, 0.0, 0.0);
 	
-	
 	glScalef(scale, scale, scale);
 	glRotatef(x_angle, 1.0f, 0.0f, 0.0f);
 	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
 
 	glShadeModel(GL_SMOOTH);
 	render_plane();
-	
+
+	glTranslatef(0.0, 0.0, 1.0);
 	createBox();
 
-
-
+	glTranslatef(0.0, 0.0, 1.0);
+	createCylinder();
 
 	glutSwapBuffers();
 }
