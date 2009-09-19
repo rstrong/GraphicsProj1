@@ -37,17 +37,19 @@ void redisplay_all();
 
 int window, top, bottom;
 
-int sub_width = WIDTH * 0.9;
-int top_height = HEIGHT * 0.8;
-int bottom_height = HEIGHT - top_height;
-
-float test[3] = {0.0, 0.0, -40.0};
+int bottom_width, bottom_height, top_width, top_height;
 
 float x_angle, y_angle;
+float viewing_angle = 0.0;
 GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_10;
 
 float x_car = 0.0; 
 float y_car = 0.0;
+
+int sm;
+int sub_view;
+
+
 
 void
 main_reshape(int width,  int height) 
@@ -63,11 +65,15 @@ main_reshape(int width,  int height)
 
     glutSetWindow(top);
     glutPositionWindow(GAP, GAP);
-    glutReshapeWindow(width - (2 * GAP), (height * 0.8) - (2 *GAP));
+	top_width = width - (2 * GAP);
+	top_height = (height * 0.8) - (2 * GAP);
+    glutReshapeWindow(top_width, top_height);
    
 	glutSetWindow(bottom);
+	bottom_width = width - (2 * GAP);
+	bottom_height = (height * 0.2) - GAP;
     glutPositionWindow(GAP,(height * 0.8));
-    glutReshapeWindow(width - (2 * GAP), (height * 0.2) - GAP);
+    glutReshapeWindow(bottom_width, bottom_height);
 }
 
 void
@@ -86,11 +92,13 @@ main_keyboard(unsigned char key, int x, int y)
 	std::cout << "See Key: " << key << std::endl;
     switch (key) {
 	case 'B':
+		viewing_angle += 0.01;
 		break;
 	default:
 		break;
     }
 
+	std::cout << "Viewing Angle: " << viewing_angle << std::endl;
 	redisplay_all();
 }
 
@@ -127,11 +135,9 @@ top_reshape(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 	gluPerspective(45.0f, (float)width / (float)height, 0.1f, 10.0f);
-	gluLookAt(0.0, 0.0, 2.10, 
+	gluLookAt(0.0, viewing_angle, 2.10, 
 				0.0, 0.0, 0.0,
 				0.0, 1.0, 0.0);
-	//	gluOrtho2D ((GLdouble) 100-width/2, (GLdouble) 100+width/2, 
-//		(GLdouble) 100-height/2, (GLdouble) 100+height/2);
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -279,7 +285,6 @@ void createBox(void)
 
 }
 
-//TODO
 void createCylinder(void)
 {
 	Mesh cyl;
@@ -288,7 +293,6 @@ void createCylinder(void)
 	int size = 0;	
 	for(i = 0; i <= 6.4; i += 0.2)
 	{
-		//std::cout << "Coords: " << sin(i) << "," << cos(i) << std::endl;
 		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 0));
 		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 2));
 		size += 2;
@@ -395,6 +399,7 @@ void redisplay_all()
 
 void mouse(int button, int state, int x, int y)
 {
+	std::cout << "MouseX: " << mouse_x << std::endl;
 	mouse_x = x;
 	mouse_y = y;
 	mouse_button = button;
@@ -415,6 +420,36 @@ void motion(int x, int y)
 	mouse_x = x;
 	mouse_y = y;
 	glutPostRedisplay();
+}
+
+void changeView(int option)
+{
+	// change camera here
+	if(option == 0)
+	{
+		viewing_angle = 0.0;
+	}
+	if(option == 1)
+	{
+		viewing_angle = -1.4;	
+	}
+	top_reshape(top_width, top_height);
+	redisplay_all();
+}
+
+void setupMenus(void)
+{
+	
+	sub_view = glutCreateMenu(changeView);
+	glutAddMenuEntry("Top Down", 0);
+	glutAddMenuEntry("45 Degree Down", 1);
+
+	// Other sub menus
+
+
+	sm = glutCreateMenu(top_menu);
+	glutAddSubMenu("View", sub_view);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 int
@@ -440,14 +475,9 @@ main(int argc, char** argv)
     glutSpecialFunc(special_keyboard);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
-	//sm = glutCreateMenu(top_menu);
-    //glutAddMenuEntry("Options", 0);
-    //glutAddMenuEntry("", 0);
-    //glutAddMenuEntry("Toggle big vertices", 'B');
-    //glutAddMenuEntry("Specify colors@vertices", 'C');
-    //glutAddMenuEntry("Toggle drawing outlines", 'O');
-    //glutAttachMenu(GLUT_RIGHT_BUTTON);
 
+	setupMenus();
+	
 	glClearColor(0.0, 0.0, 0.0, 0.0);
     bottom = glutCreateSubWindow(window, 1000, 1000, 50, 50);
     glutReshapeFunc(bottom_reshape);
