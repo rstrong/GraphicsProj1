@@ -10,6 +10,9 @@
 
 #define debug 1
 
+void start_and_finish(void);
+void car(void);
+void move_car(void);
 typedef Imath::Vec3<float> Vec3f;
 typedef Imath::Vec2<float> Vec2f;
 
@@ -43,8 +46,11 @@ float x_angle, y_angle;
 float viewing_angle = 0.0;
 GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_10;
 
-float x_car = 0.0; 
-float y_car = 0.0;
+Vec3f steer;
+float car_speed = 0.0;
+float car_angle = 0.0;
+float x_car = -7.0; 
+float y_car = 3.2;
 
 int sm;
 int sub_view;
@@ -108,23 +114,31 @@ void special_keyboard(int key, int x, int y)
 	switch(key)
 	{
 	case GLUT_KEY_LEFT:
-		x_car -= 0.1;
+		car_angle += 0.04;
 		break;
 	case GLUT_KEY_RIGHT: 
-		x_car += 0.1;
+		car_angle -= 0.04;
 		break;
 	case GLUT_KEY_UP:
-		y_car += 0.1;
+		car_speed += 0.01;
 		break;
 	case GLUT_KEY_DOWN:
-		y_car -= 0.1;
+		car_speed -= 0.01;
 		break;
 	default:
 		break;
 	}
-	
+
+	steer.setValue((float)(car_speed * cos(car_angle)), (float)(car_speed * sin(car_angle)), 0.0f);
+	move_car();
 	std::cout << "X,Y of car: " << x_car << "," << y_car << std::endl;
 	redisplay_all();
+}
+
+void move_car(void)
+{
+	x_car += steer.x;
+	y_car += steer.y;
 }
 
 void
@@ -202,10 +216,6 @@ void render_plane(void)
 	std::vector<Vec3f> v_color = plane.m_color;
 	// Need to change to vi 
 	std::cout << "Scale is: " << scale << std::endl;
-//	glScalef(scale, scale, scale);
-//	glRotatef(x_angle, 1.0f, 0.0f, 0.0f);
-//	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
-//	glTranslatef(0.0, 0.0, -10.0);
 	glBegin(GL_QUADS);
 	glEnable(GL_BLEND);
 	for(unsigned int i = 0; i < vi.size(); i++)
@@ -215,11 +225,6 @@ void render_plane(void)
 
 	}
 	glEnd();
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glTranslatef(x_car, y_car, 0.25f);
-	glutWireSphere(0.25f, 10, 10);
-
-//	glLoadIdentity();
 }
 
 void createBox(void)
@@ -340,13 +345,40 @@ top_display(void)
 	glShadeModel(GL_SMOOTH);
 	render_plane();
 
-	glTranslatef(0.0, 0.0, 1.0);
-	createBox();
+	start_and_finish();
 
-	glTranslatef(0.0, 0.0, 1.0);
-	createCylinder();
+	car();
 
 	glutSwapBuffers();
+}
+
+void car(void)
+{
+	move_car();
+	glPushMatrix();
+	glTranslatef(x_car, y_car, 1.0);
+	glColor3f(1.0, 0.23, 0.43);
+	glutWireSphere(0.25f, 10, 10);
+	glPopMatrix();
+}
+
+void start_and_finish (void)
+{
+	// Create Start and Finish boxes
+
+	//Start
+	glPushMatrix();
+	glScalef(1, 1, 0.01);
+	glTranslatef(-7.2, 3.8, 1.0);
+	createBox();
+	glPopMatrix();
+
+	//end
+	glPushMatrix();
+	glScalef(1, 1, 0.01);
+	glTranslatef(7.2, -3.8, 1.0);
+	createBox();
+	glPopMatrix();
 }
 
 void
@@ -455,6 +487,9 @@ void setupMenus(void)
 int
 main(int argc, char** argv)
 {
+	// Set up stuff
+	steer.setValue(0.0, 0.0,0.0);
+
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(HEIGHT, WIDTH);
     glutInitWindowPosition(50, 50);
@@ -471,6 +506,7 @@ main(int argc, char** argv)
     top = glutCreateSubWindow(window, 1, 1, 10, 10);
     glutReshapeFunc(top_reshape);
     glutDisplayFunc(top_display);
+	glutIdleFunc(redisplay_all);
     glutKeyboardFunc(main_keyboard);
     glutSpecialFunc(special_keyboard);
 	glutMouseFunc(mouse);
