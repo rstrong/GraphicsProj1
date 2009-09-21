@@ -8,6 +8,7 @@
 #include <ImathVec.h>
 #include <vector>
 #include <fstream>
+#include <time.h>
 
 #define debug 1
 #define PI 3.14159265
@@ -47,7 +48,7 @@ int bottom_width, bottom_height, top_width, top_height;
 
 float x_angle, y_angle;
 float viewing_angle = 0.0;
-GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_10;
+GLvoid *font_style = GLUT_BITMAP_HELVETICA_12;
 
 Vec3f steer;
 float car_speed = 0.0;
@@ -60,6 +61,12 @@ int sub_view;
 
 Mesh elephant;
 Mesh vehicle;
+
+// timer
+time_t start;
+time_t end;
+bool hasStarted = false;
+bool isFinished = false;
 
 void
 main_reshape(int width,  int height) 
@@ -125,6 +132,11 @@ void special_keyboard(int key, int x, int y)
 		break;
 	case GLUT_KEY_UP:
 		car_speed += 0.01;
+		if(!hasStarted)
+		{
+			hasStarted = true;
+			start = time(NULL);
+		}
 		break;
 	case GLUT_KEY_DOWN:
 		car_speed -= 0.01;
@@ -134,7 +146,15 @@ void special_keyboard(int key, int x, int y)
 	}
 	
 	steer.setValue((float)(car_speed * cos(car_angle*PI/180)), (float)(car_speed * sin(car_angle*PI/180)), 0.0f);
-	move_car();
+	if((x_car > 6.3) && (y_car < -3.3))
+	{
+		isFinished = true;
+		end = time(NULL);
+	}
+	else
+	{
+		move_car();
+	}
 	std::cout << "X,Y of car: " << x_car << "," << y_car << std::endl;
 	std::cout << "Car angle: " << car_angle << std::endl;
 	redisplay_all();
@@ -542,17 +562,55 @@ bottom_reshape(int width, int height)
     glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
+void drawString(float x, float y, float z, const char *string)
+{
+	glRasterPos3f(x, y, z);
+	for (const char* c=string; *c != '\0'; c++)
+	{
+		glutBitmapCharacter(font_style, *c);
+	}
+}
+
+inline std::string stringify(int x)
+{
+	std::ostringstream o;
+	o << x;
+	return o.str();
+}
+
 void 
 bottom_display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glColor3f(1.0, 0.0, 0.0);
-	glLineWidth(3.0);
-	glBegin(GL_LINES);
-		glVertex3f(20, 20, 0);
-		glVertex3f(50, 50, 0);
-	glEnd();
+	std::string timer;
+	std::string finish = "FINISHED!!!!";
+	time_t now = time(NULL);
+	int diff = now - start;
+	if(hasStarted)
+	{
+		if(isFinished)
+		{
+			diff = end - start;
+		}
+		else
+		{
+			diff = now - start;
+		}
+	}
+	else
+	{
+		diff = 0;
+	}
+	
+	timer = "Time Elapsed: " + stringify(diff) + " sec";
+	drawString(15, 15, 1, timer.c_str());
+
+	if(isFinished)
+	{
+		drawString(150, 15, 1, finish.c_str());
+	}
 
     glutSwapBuffers();
 }
