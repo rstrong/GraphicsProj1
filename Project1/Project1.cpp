@@ -7,8 +7,10 @@
 #include <GL/glut.h>
 #include <ImathVec.h>
 #include <vector>
+#include <fstream>
 
 #define debug 1
+#define PI 3.14159265
 
 void start_and_finish(void);
 void car(void);
@@ -26,6 +28,7 @@ struct Mesh
 	std::vector<int> m_ci;
 };
 
+Mesh* load(const char*);
 int HEIGHT = 1024;
 int WIDTH = 768;
 
@@ -48,14 +51,15 @@ GLvoid *font_style = GLUT_BITMAP_TIMES_ROMAN_10;
 
 Vec3f steer;
 float car_speed = 0.0;
-float car_angle = 0.0;
+int car_angle = -90;
 float x_car = -7.0; 
 float y_car = 3.2;
 
 int sm;
 int sub_view;
 
-
+Mesh elephant;
+Mesh vehicle;
 
 void
 main_reshape(int width,  int height) 
@@ -114,10 +118,10 @@ void special_keyboard(int key, int x, int y)
 	switch(key)
 	{
 	case GLUT_KEY_LEFT:
-		car_angle += 0.04;
+		car_angle += 4;
 		break;
 	case GLUT_KEY_RIGHT: 
-		car_angle -= 0.04;
+		car_angle -= 4;
 		break;
 	case GLUT_KEY_UP:
 		car_speed += 0.01;
@@ -128,10 +132,11 @@ void special_keyboard(int key, int x, int y)
 	default:
 		break;
 	}
-
-	steer.setValue((float)(car_speed * cos(car_angle)), (float)(car_speed * sin(car_angle)), 0.0f);
+	
+	steer.setValue((float)(car_speed * cos(car_angle*PI/180)), (float)(car_speed * sin(car_angle*PI/180)), 0.0f);
 	move_car();
 	std::cout << "X,Y of car: " << x_car << "," << y_car << std::endl;
+	std::cout << "Car angle: " << car_angle << std::endl;
 	redisplay_all();
 }
 
@@ -144,7 +149,6 @@ void move_car(void)
 void
 top_reshape(int width, int height)
 {
-	std::cout << "top_reshape" << std::endl;
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -158,7 +162,7 @@ top_reshape(int width, int height)
 
 void render_plane(void)
 {
-	std::cout<< "render_plane" << std::endl; 
+	//std::cout<< "render_plane" << std::endl; 
 
 	/**
 	Plane (probably should load elsewhere....
@@ -215,7 +219,7 @@ void render_plane(void)
 	std::vector<int> vi = plane.m_vi;
 	std::vector<Vec3f> v_color = plane.m_color;
 	// Need to change to vi 
-	std::cout << "Scale is: " << scale << std::endl;
+	//std::cout << "Scale is: " << scale << std::endl;
 	glBegin(GL_QUADS);
 	glEnable(GL_BLEND);
 	for(unsigned int i = 0; i < vi.size(); i++)
@@ -225,6 +229,122 @@ void render_plane(void)
 
 	}
 	glEnd();
+}
+
+void load_models(void)
+{
+	Mesh* tmp;
+	tmp = load("data/elephav.obj");
+
+	elephant = *tmp;
+
+	tmp = load("data/dirtbug.obj");
+	vehicle = *tmp;
+}
+
+int strToInt(const char* c)
+{
+	int i;
+	if(sscanf(c, "%i", &i) == 1)
+	{
+		return i;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+Mesh* load(const char* file)
+{
+	std::ifstream infile(file);
+	if(infile.fail())
+	{
+		std::cout << "Error Opening File: " << file << std::endl;
+		return false;
+	}
+
+	Mesh* model = new Mesh;
+	char current_line[1024];
+
+	while(!infile.eof())
+	{
+		infile.getline(current_line, 1024);
+
+		switch (current_line[0])
+		{
+		case 'v':
+			{
+				float x,y,z;
+				switch(current_line[1])
+				{
+				case 'n':
+					break;
+				case 't':
+					break;
+				default:
+					sscanf(current_line, "v %f %f %f", &x, &y, &z);
+					//std::cout << "Loaded X,Y,Z: " << x << "," << y << "," << z << std::endl;
+					model->m_v.push_back(Vec3f(x,y,z));
+					break;
+				}
+			}
+			break;
+
+		case 'f':
+			{
+				char* match;
+				match = strtok (current_line, " ");
+				while(match != NULL)
+				{
+					std::string whole = match;
+					if(match[0] != 'f')
+					{
+						int i = 0;
+						int start = 0;
+						int seen = 0;
+						int data;
+						while(match[i] != NULL)
+						{
+							if(match[i] == '/')
+							{
+								data = strToInt(whole.substr(start,i).c_str());
+								//std::cout << "Match: " << data << std::endl;
+								start = i + 1;
+								if(seen == 0)
+								{
+									model->m_vi.push_back(data);
+									seen++;
+								}
+								else
+								{
+									// Texture
+								}
+									
+							}
+							if(match[i + 1] == NULL)
+							{
+								// Color
+								data = strToInt(whole.substr(start,i+1).c_str()); 
+								//std::cout << "Match: " << data << std::endl;
+							}
+							i++;
+						}
+						//std::cout << "Found Match: " << match << std::endl;
+					}
+					match = strtok(NULL, " ");
+				}
+				break;
+			}
+		default: break;
+		}
+	}
+
+	infile.close();
+
+	return model;
+
+
 }
 
 void createBox(void)
@@ -290,6 +410,22 @@ void createBox(void)
 
 }
 
+void renderObject(Mesh obj)
+{
+	std::vector<Vec3f> v = obj.m_v;
+	std::vector<int> vi = obj.m_vi;
+	std::vector<Vec3f> v_color = obj.m_color;
+
+	glBegin(GL_TRIANGLES);
+	glColor3f(0.0, 0.5, 0.5);
+	for(unsigned int i = 0; i < vi.size(); i++)
+	{
+		//std::cout << "Face(" << i << "/" << vi.size() << "). x,y,z: " << v[vi[i] - 1].x <<"," <<  v[vi[i] - 1].y <<","<< v[vi[i] - 1].z << std::endl;
+		glVertex3f(v[vi[i] - 1].x, v[vi[i] - 1].y, v[vi[i] -1].z);
+	}
+	glEnd();
+}
+
 void createCylinder(void)
 {
 	Mesh cyl;
@@ -332,7 +468,6 @@ void createCylinder(void)
 void
 top_display(void)
 {
-	std::cout << "top_display" << std::endl;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glLoadIdentity();
@@ -349,6 +484,16 @@ top_display(void)
 
 	car();
 
+	glPushMatrix();
+	
+	glTranslatef(7.0, 3.6, 0.0);
+	glScalef(0.002, 0.002, 0.002);
+	
+	glRotated(90, 1.0, 0.0, 0.0);
+	
+	renderObject(elephant);
+	glPopMatrix();
+	
 	glutSwapBuffers();
 }
 
@@ -357,8 +502,12 @@ void car(void)
 	move_car();
 	glPushMatrix();
 	glTranslatef(x_car, y_car, 1.0);
+	glScalef(0.004, 0.004, 0.004);
 	glColor3f(1.0, 0.23, 0.43);
-	glutWireSphere(0.25f, 10, 10);
+	
+	glRotated(car_angle + 90, 0.0, 0.0, 1.0);
+	glRotated(90, 1.0, 0.0, 0.0);
+	renderObject(vehicle);
 	glPopMatrix();
 }
 
@@ -445,7 +594,7 @@ void motion(int x, int y)
 		x_angle += (float(y - mouse_y)/HEIGHT)*360.0;
 	}
 
-	if(mouse_button == GLUT_RIGHT_BUTTON)
+	if(mouse_button == GLUT_MIDDLE_BUTTON)
 	{
 		scale += (y-mouse_y)/100.0;
 	}
@@ -489,6 +638,9 @@ main(int argc, char** argv)
 {
 	// Set up stuff
 	steer.setValue(0.0, 0.0,0.0);
+
+	// Load models
+	load_models();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(HEIGHT, WIDTH);
