@@ -61,6 +61,7 @@ int sub_view;
 
 Mesh elephant;
 Mesh vehicle;
+Mesh plane;
 
 // timer
 time_t start;
@@ -251,6 +252,41 @@ void render_plane(void)
 	glEnd();
 }
 
+void generatePlane(void)
+{
+	int i,j;
+	int x = 1;
+	int y =1;
+	
+	int total = 0;
+	int n = 0;
+	for(i = -5; i < 6; i++)
+	{
+		n = 0;
+		for(j = -9; j < 10; j++)
+		{
+			n++;
+			plane.m_v.push_back(Vec3f(j * x, y * i, 0));
+			total++;
+		}
+	}
+	for(j = 0; j < 10; j++)
+	{
+		for(i = 0; i < n -1 ; i++)
+		{
+			// first triangle
+			plane.m_vi.push_back(i + (j* n) + 1);
+			plane.m_vi.push_back(i+1 + (j*n) + 1);
+			plane.m_vi.push_back(i+n+0 + (j*n) +1);
+			
+			//second triangle
+			plane.m_vi.push_back(i+1 + (j*n) +1);
+			plane.m_vi.push_back(i+n+1 + (j*n) +1);
+			plane.m_vi.push_back(i+n+0 + (j*n) +1);
+		}
+	}
+}
+
 void load_models(void)
 {
 	Mesh* tmp;
@@ -260,6 +296,8 @@ void load_models(void)
 
 	tmp = load("data/dirtbug.obj");
 	vehicle = *tmp;
+
+	generatePlane();
 }
 
 int strToInt(const char* c)
@@ -437,10 +475,9 @@ void renderObject(Mesh obj)
 	std::vector<Vec3f> v_color = obj.m_color;
 
 	glBegin(GL_TRIANGLES);
-	glColor3f(0.0, 0.5, 0.5);
 	for(unsigned int i = 0; i < vi.size(); i++)
 	{
-		//std::cout << "Face(" << i << "/" << vi.size() << "). x,y,z: " << v[vi[i] - 1].x <<"," <<  v[vi[i] - 1].y <<","<< v[vi[i] - 1].z << std::endl;
+		//std::cout << "1079 test: " << vi[1079] << std::endl;
 		glVertex3f(v[vi[i] - 1].x, v[vi[i] - 1].y, v[vi[i] -1].z);
 	}
 	glEnd();
@@ -498,7 +535,10 @@ top_display(void)
 	glRotatef(y_angle, 0.0f, 1.0f, 0.0f);
 
 	glShadeModel(GL_SMOOTH);
-	render_plane();
+
+//	render_plane();
+	glColor3f(0.5, 0.5, 0.0);
+	renderObject(plane);
 
 	start_and_finish();
 
