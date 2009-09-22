@@ -63,6 +63,7 @@ Mesh elephant;
 Mesh vehicle;
 Mesh plane;
 Mesh cylinder;
+Mesh cube;
 
 // timer
 time_t start;
@@ -251,22 +252,83 @@ void generateCylinder(void)
 		cylinder.m_vi.push_back(i + 2 +1);
 		cylinder.m_vi.push_back(cylinder.m_v.size() -1);
 	}
+}
 
-//cos(car_angle*PI/180
+
+void generateCube(void)
+{
+	// First face
+	float i;
+	for(i = -1; i < 1.1; i += 0.1)
+	{
+		cube.m_v.push_back(Vec3f(i, 1.0, -1.0));
+		cube.m_v.push_back(Vec3f(i, 1.0, 1.0));
+	}
+	std::cout << "f1 done" << std::endl;
+	// second
+	for(i = 0.9; i > -1.1; i -= 0.1)
+	{
+		cube.m_v.push_back(Vec3f(1.0, i, -1.0));
+		cube.m_v.push_back(Vec3f(1.0, i, 1.0));
+	}
+
+	// third
+	for(i = 0.9; i > -1.1; i -= 0.1)
+	{
+		cube.m_v.push_back(Vec3f(i, -1.0, -1.0));
+		cube.m_v.push_back(Vec3f(i, -1.0, 1.0));
+	}
+
+	// four
+	for(i = -0.9; i < 1.1; i += 0.1)
+	{
+		cube.m_v.push_back(Vec3f(-1.0, i, -1.0));
+		cube.m_v.push_back(Vec3f(-1.0, i, 1.0));
+	}
+
+	cube.m_v.push_back(Vec3f(0.0, 0.0, -1.0));
+	cube.m_v.push_back(Vec3f(0.0, 0.0, 1.0));
+	int j;
+	for(j = 0; j < (cube.m_v.size() - 2) -2; j+= 2)
+	{
+		cube.m_vi.push_back(j +1);
+		cube.m_vi.push_back(j+2 +1);
+		cube.m_vi.push_back(j+1 +1);
+
+		cube.m_vi.push_back(j+2 +1);
+		cube.m_vi.push_back(j+3 +1);
+		cube.m_vi.push_back(j+1 +1);
+
+		cube.m_vi.push_back(j+1 +1);
+		cube.m_vi.push_back(j+3 +1);
+		cube.m_vi.push_back(cube.m_v.size());
+
+		cube.m_vi.push_back(j +1);
+		cube.m_vi.push_back(j + 2 +1);
+		cube.m_vi.push_back(cube.m_v.size() -1);
+	}
 }
 
 void load_models(void)
 {
 	Mesh* tmp;
-	tmp = load("data/elephav.obj");
 
+	std::cout << "Loading elephant..." << std::endl;
+	tmp = load("data/elephav.obj");
 	elephant = *tmp;
 
+	std::cout << "loading car..." << std::endl;
 	tmp = load("data/dirtbug.obj");
 	vehicle = *tmp;
 
+	std::cout << "generating plane..." << std::endl;
 	generatePlane();
+
+	std::cout << "generating cylinder..." << std::endl;
 	generateCylinder();
+
+	std::cout << "generating cube..." << std::endl;
+	generateCube();
 }
 
 int strToInt(const char* c)
@@ -471,7 +533,7 @@ top_display(void)
 	renderObject(plane);
 
 	glColor3f(0.3, 1.0, 0.0);
-	renderObject(cylinder);
+	renderObject(cube);
 	start_and_finish();
 
 	car();
