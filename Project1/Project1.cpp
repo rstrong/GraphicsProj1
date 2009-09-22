@@ -62,6 +62,7 @@ int sub_view;
 Mesh elephant;
 Mesh vehicle;
 Mesh plane;
+Mesh cylinder;
 
 // timer
 time_t start;
@@ -181,77 +182,6 @@ top_reshape(int width, int height)
     glLoadIdentity();
 }
 
-void render_plane(void)
-{
-	//std::cout<< "render_plane" << std::endl; 
-
-	/**
-	Plane (probably should load elsewhere....
-	**/
-	Mesh plane;
-
-	//load vertices
-	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.0));
-	plane.m_v.push_back(Vec3f(-8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(8.5, 5.0, 0.25));
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.25));
-	plane.m_v.push_back(Vec3f(-8.5, -5.0, 0.0));
-	plane.m_v.push_back(Vec3f(8.5, -5.0, 0.0));
-	
-	plane.m_color.push_back(Vec3f(1.0, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.9, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.8, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.7, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.6, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.5, 0.0, 0.0));
-	plane.m_color.push_back(Vec3f(0.5, 0.1, 0.0));
-	plane.m_color.push_back(Vec3f(0.5, 0.2, 0.0));
-
-	plane.m_vi.push_back(0);
-	plane.m_vi.push_back(1);
-	plane.m_vi.push_back(2);
-	plane.m_vi.push_back(3);
-	plane.m_vi.push_back(4);
-	plane.m_vi.push_back(5);
-	plane.m_vi.push_back(6);
-	plane.m_vi.push_back(7);
-	plane.m_vi.push_back(3);
-	plane.m_vi.push_back(2);
-	plane.m_vi.push_back(5);
-	plane.m_vi.push_back(4);
-	plane.m_vi.push_back(7);
-	plane.m_vi.push_back(6);
-	plane.m_vi.push_back(1);
-	plane.m_vi.push_back(0);
-	plane.m_vi.push_back(2);
-	plane.m_vi.push_back(2);
-	plane.m_vi.push_back(6);
-	plane.m_vi.push_back(5);
-	plane.m_vi.push_back(0);
-	plane.m_vi.push_back(1);
-	plane.m_vi.push_back(4);
-	plane.m_vi.push_back(7);
-
-	/* End Plane */ 
-
-	std::vector<Vec3f> v = plane.m_v;
-	std::vector<int> vi = plane.m_vi;
-	std::vector<Vec3f> v_color = plane.m_color;
-	// Need to change to vi 
-	//std::cout << "Scale is: " << scale << std::endl;
-	glBegin(GL_QUADS);
-	glEnable(GL_BLEND);
-	for(unsigned int i = 0; i < vi.size(); i++)
-	{
-		glColor3f(v_color[vi[i]].x, v_color[vi[i]].y, v_color[vi[i]].z); 
-		glVertex3f(v[vi[i]].x, v[vi[i]].y, v[vi[i]].z);
-
-	}
-	glEnd();
-}
-
 void generatePlane(void)
 {
 	int i,j;
@@ -287,6 +217,44 @@ void generatePlane(void)
 	}
 }
 
+
+void generateCylinder(void)
+{
+	int i;
+	for(i = 0; i < 362; i++)
+	{
+		cylinder.m_v.push_back(Vec3f(sin(i*PI/180), cos(i*PI/180), 0));
+		cylinder.m_v.push_back(Vec3f(sin(i*PI/180), cos(i*PI/180), 2));
+	}
+	cylinder.m_v.push_back(Vec3f(0, 0, 0));
+	cylinder.m_v.push_back(Vec3f(0, 0, 2));
+
+	for(i = 0; i < (cylinder.m_v.size() - 2) -2; i+= 2)
+	{
+		// side of cylinder, triangle one
+		cylinder.m_vi.push_back(i +1);
+		cylinder.m_vi.push_back(i+2 +1);
+		cylinder.m_vi.push_back(i+1 +1);
+
+		// side of cylinder triangle two
+		cylinder.m_vi.push_back(i+2 +1);
+		cylinder.m_vi.push_back(i+3 +1);
+		cylinder.m_vi.push_back(i+1 +1);
+
+		// top of cylinder
+		cylinder.m_vi.push_back(i+1 +1);
+		cylinder.m_vi.push_back(i+3 +1);
+		cylinder.m_vi.push_back(cylinder.m_v.size());
+
+		//bottom of cylinder
+		cylinder.m_vi.push_back(i +1);
+		cylinder.m_vi.push_back(i + 2 +1);
+		cylinder.m_vi.push_back(cylinder.m_v.size() -1);
+	}
+
+//cos(car_angle*PI/180
+}
+
 void load_models(void)
 {
 	Mesh* tmp;
@@ -298,6 +266,7 @@ void load_models(void)
 	vehicle = *tmp;
 
 	generatePlane();
+	generateCylinder();
 }
 
 int strToInt(const char* c)
@@ -483,45 +452,6 @@ void renderObject(Mesh obj)
 	glEnd();
 }
 
-void createCylinder(void)
-{
-	Mesh cyl;
-
-	float i;
-	int size = 0;	
-	for(i = 0; i <= 6.4; i += 0.2)
-	{
-		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 0));
-		cyl.m_v.push_back(Vec3f(sin(i), cos(i), 2));
-		size += 2;
-	}
-	int j;
-	for(j = 0; j < size; j += 2)
-	{
-		if( (j + 1) < size)
-		{
-			cyl.m_vi.push_back(j);
-			cyl.m_vi.push_back(j+1);
-		}
-	}
-
-
-	std::vector<Vec3f> v = cyl.m_v;
-	std::vector<int> vi = cyl.m_vi;
-	//std::vector<Vec3f> v_color = box.m_color;
-	
-	glBegin(GL_QUAD_STRIP);
-	glColor3f(0.0, 0.0, 1.0);
-	for(unsigned int i = 0; i < vi.size(); i++)
-	{
-		//glColor3f(v_color[vi[i]].x, v_color[vi[i]].y, v_color[vi[i]].z); 
-		glVertex3f(v[vi[i]].x, v[vi[i]].y, v[vi[i]].z);
-
-	}
-	glEnd();
-
-}
-
 void
 top_display(void)
 {
@@ -540,6 +470,8 @@ top_display(void)
 	glColor3f(0.5, 0.5, 0.0);
 	renderObject(plane);
 
+	glColor3f(0.3, 1.0, 0.0);
+	renderObject(cylinder);
 	start_and_finish();
 
 	car();
